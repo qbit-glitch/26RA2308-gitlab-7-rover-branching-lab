@@ -1,0 +1,6 @@
+Kestrel-1 team notes
+====================
+- Asha owns the firmware in src/.
+- Ben owns planning and cuts the releases.
+- Chitra owns the vision tools and the experiment log.
+- Lab rule: main holds only reviewed work.

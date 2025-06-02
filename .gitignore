@@ -1,0 +1,12 @@
+# Python
+__pycache__/
+*.pyc
+
+# Build output
+build/
+*.o
+a.out
+
+# Local lab files (never committed)
+submission/outputs.txt
+submission/results.txt
