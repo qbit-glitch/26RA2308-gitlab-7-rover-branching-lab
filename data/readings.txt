@@ -1,0 +1,9 @@
+# camera score, label (1 = obstacle present)
+0.91 1
+0.82 1
+0.64 1
+0.52 1
+0.47 0
+0.45 0
+0.22 0
+0.10 0
