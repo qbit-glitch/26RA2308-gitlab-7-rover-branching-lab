@@ -1,3 +1,3 @@
-#define SENSOR_TIMEOUT_MS 50
+#define SENSOR_TIMEOUT_MS 5
 #define SENSOR_MAX_CM 400
 #define SENSOR_MIN_CM 2
