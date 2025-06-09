@@ -5,3 +5,8 @@ void move_forward(int speed)
 {
     (void)speed; /* motor driver is not wired up yet */
 }
+
+void turn_left(int degrees)
+{
+    (void)degrees; /* turning is not calibrated yet */
+}
