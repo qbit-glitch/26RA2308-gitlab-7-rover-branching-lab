@@ -13,3 +13,8 @@ Firmware (C) and tools (Python) for the Kestrel-1 rover.
 ## Team rule
 
 `main` holds only reviewed work. Start every new piece of work on its own branch.
+
+## Quick checks
+
+    python3 tests/check_build.py
+    python3 tools/detector.py data/readings.txt
