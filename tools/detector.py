@@ -4,7 +4,7 @@ from __future__ import annotations
 import sys
 from typing import List, Tuple
 
-THRESHOLD = 0.40
+THRESHOLD = 0.55
 
 
 def load_readings(path: str) -> List[Tuple[float, int]]:
