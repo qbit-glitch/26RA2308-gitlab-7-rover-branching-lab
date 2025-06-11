@@ -1,0 +1,178 @@
+##############################################################################
+#  ROVER BRANCHING LAB  -  SUBMISSION FILE
+#
+#  1. Copy this file:    cp submission/outputs.template.txt submission/outputs.txt
+#  2. Do the tasks in ASSIGNMENT.md, in order.
+#  3. After each command, paste what the terminal printed UNDER the matching
+#     "--- N.M" line, replacing the line "(paste output here)".
+#  4. Do not edit or delete the "=== TASK" and "--- N.M" lines.
+#  5. Check your work at any time (from branch main):    python3 tests/grade.py
+##############################################################################
+
+Name   :
+Reg No :
+
+
+=== TASK 1 : Arrive and look around  (10 marks) ===
+
+--- 1.1  git config --local --list ---
+(paste output here)
+
+--- 1.2  git branch -v ---
+(paste output here)
+
+--- 1.3  git branch -a ---
+(paste output here)
+
+--- 1.4  cat .git/HEAD && cat .git/refs/heads/main && wc -c < .git/refs/heads/main ---
+(paste output here)
+
+
+=== TASK 2 : Open work streams  (15 marks) ===
+
+--- 2.1  git switch feature/obstacle-avoidance ---
+(paste output here)
+
+--- 2.2  git switch -c feature/path-planning ---
+(paste output here)
+
+--- 2.3  git checkout -b experiment/yolo-baseline ---
+(paste output here)
+
+--- 2.4  git checkout -b feature/discarded-idea ---
+(paste output here)
+
+--- 2.5  git commit -m "wip: try lidar for obstacle detection" ---
+(paste output here)
+
+--- 2.6  git checkout main   then   git branch -v ---
+(paste output here)
+
+
+=== TASK 3 : Two features in parallel  (20 marks) ===
+
+--- 3.1  git commit -am "feat(nav): add obstacle avoidance stub" ---
+(paste output here)
+
+--- 3.2  git commit -m "feat(nav): add path planner stub" ---
+(paste output here)
+
+--- 3.3  git switch feature/obstacle-avoidance   then   ls tools   then   head -3 src/controller.c ---
+(paste output here)
+
+--- 3.4  git switch feature/path-planning   then   ls tools   then   head -3 src/controller.c ---
+(paste output here)
+
+--- 3.5  git switch main   then   ls tools   then   head -3 src/controller.c ---
+(paste output here)
+
+--- 3.6  git diff --stat feature/obstacle-avoidance feature/path-planning ---
+(paste output here)
+
+
+=== TASK 4 : The big picture  (10 marks) ===
+
+--- 4.1  git tree ---
+(paste output here)
+
+--- 4.2  git branch -a ---
+(paste output here)
+
+--- 4.3  git branch --merged ---
+(paste output here)
+
+--- 4.4  git branch --no-merged ---
+(paste output here)
+
+# ANSWER-1 : how many of your branches contain work that main does not have?
+ANSWER-1 :
+
+
+=== TASK 5 : Tidy up  (10 marks) ===
+
+--- 5.1  git branch -m experiment/yolo-baseline experiment/yolov8-baseline   then   git branch ---
+(paste output here)
+
+--- 5.2  git reflog experiment/yolov8-baseline ---
+(paste output here)
+
+--- 5.3  git branch -d experiment/yolov8-baseline ---
+(paste output here)
+
+--- 5.4  git branch -d feature/discarded-idea ---
+(paste output here)
+
+--- 5.5  git branch -D feature/discarded-idea ---
+(paste output here)
+
+--- 5.6  git branch -v ---
+(paste output here)
+
+
+=== TASK 6 : Hotfix from the release commit  (15 marks) ===
+
+--- 6.1  git log --oneline ---
+(paste output here)
+
+# ANSWER-2 : SHA of the commit "release: v0.1 field build"   (at least 7 characters)
+ANSWER-2 :
+
+--- 6.2  git switch -c hotfix/sensor-timeout <SHA of ANSWER-2>   then   git log --oneline -1 ---
+(paste output here)
+
+--- 6.3  python3 tests/check_build.py   (it is supposed to fail) ---
+(paste output here)
+
+--- 6.4  git diff ---
+(paste output here)
+
+--- 6.5  python3 tests/check_build.py   (now it must pass) ---
+(paste output here)
+
+--- 6.6  git commit -am "fix(sensor): raise echo timeout to 50 ms" ---
+(paste output here)
+
+--- 6.7  git tree ---
+(paste output here)
+
+
+=== TASK 7 : Detached HEAD  (15 marks) ===
+
+--- 7.1  git log --oneline -- results/experiments.txt ---
+(paste output here)
+
+# ANSWER-3 : SHA of the commit "experiment: baseline detector run at threshold 0.40"   (at least 7 characters)
+ANSWER-3 :
+
+--- 7.2  git checkout <SHA of ANSWER-3> ---
+(paste output here)
+
+--- 7.3  python3 tools/detector.py data/readings.txt   then   git status ---
+(paste output here)
+
+--- 7.4  git commit -m "temp: experiment from old commit" ---
+(paste output here)
+
+# ANSWER-4 : the SHA printed in square brackets by the 7.4 commit   (at least 7 characters)
+ANSWER-4 :
+
+--- 7.5  git switch -c experiment/detached-recovery   then   git log --oneline -2 ---
+(paste output here)
+
+--- 7.6  git commit -m "temp: throwaway idea" ---
+(paste output here)
+
+--- 7.7  git switch main   then   git reflog -6 ---
+(paste output here)
+
+
+=== TASK 8 : Shift summary  (5 marks) ===
+
+--- 8.1  git branch -vv ---
+(paste output here)
+
+--- 8.2  git status ---
+(paste output here)
+
+# ANSWER-5 : how many local branches do you have now?
+ANSWER-5 :
