@@ -55,6 +55,23 @@ def get_answer(text: str, number: int) -> str:
     return "" if value.startswith("<") else value
 
 
+def get_answer_int(text: str, number: int) -> str:
+    """The first whole number in the student's ANSWER-<number> ('3 branches' gives '3'; '' if none)."""
+    match = re.search(r"\d+", get_answer(text, number))
+    return match.group(0) if match else ""
+
+
+def get_answer_sha(text: str, number: int) -> str:
+    """The first commit number (7-40 hex digits) in the student's ANSWER-<number> ('' if none)."""
+    match = re.search(r"\b[0-9a-fA-F]{7,40}\b", get_answer(text, number))
+    return match.group(0).lower() if match else ""
+
+
+def safe_text(text: str) -> str:
+    """Remove control characters (ESC, BEL, newlines, ...) so student-written text cannot steer a terminal."""
+    return re.sub(r"[\x00-\x1f\x7f-\x9f]", "", text)
+
+
 def all_shas(text: str) -> List[str]:
     """Every hex token of 7-40 characters anywhere in the text (lower case)."""
     return [token.lower() for token in HEX_TOKEN_RE.findall(text)]
@@ -197,15 +214,25 @@ class BranchRow(NamedTuple):
 _BRANCH_RE = re.compile(r"^(?P<cur>[* +]) (?P<name>\S+)(?: +(?P<sha>[0-9a-f]{7,40}))?(?: +(?P<rest>.*))?$")
 
 
+# A row whose leading "* " or two spaces were lost when copying: a bare branch name, "name -> target", or
+# "name <sha> subject". Git's message lines ("Switched to ...", "Your branch ...") and prompts do not match.
+_BARE_RE = re.compile(r"^(?P<name>[^\s*+$#(\[][^\s]*)"
+                      r"(?:\s+(?P<arrow>->\s+\S+)|\s+(?P<sha>[0-9a-f]{7,40})(?:\s+(?P<rest>.*))?)?$")
+
+
 def parse_branch_list(text: str) -> List[BranchRow]:
-    """Parse 'git branch [-v|-vv|-a|--merged|--no-merged]' output."""
+    """Parse 'git branch [-v|-vv|-a|--merged|--no-merged]' output (also rows that lost their leading spaces)."""
     rows: List[BranchRow] = []
     for line in text.split("\n"):
         match = _BRANCH_RE.match(line.rstrip())
-        if match is None or match.group("name") in ("$", "#"):
+        if match is not None and match.group("name") not in ("$", "#"):
+            rows.append(BranchRow(match.group("cur") == "*", match.group("name"),
+                                  match.group("sha") or "", (match.group("rest") or "").strip()))
             continue
-        rows.append(BranchRow(match.group("cur") == "*", match.group("name"),
-                              match.group("sha") or "", (match.group("rest") or "").strip()))
+        bare = _BARE_RE.match(line.strip())
+        if bare is not None:
+            rows.append(BranchRow(False, bare.group("name"), bare.group("sha") or "",
+                                  (bare.group("arrow") or bare.group("rest") or "").strip()))
     return rows
 
 

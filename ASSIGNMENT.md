@@ -26,7 +26,8 @@ command from Experiment 7: `git branch`, `git switch`, `git checkout`, `git comm
 
 `git` (version 2.23 or newer, for `git switch`), `python3`, `nano`, and a C compiler (`gcc` or `cc`).
 Check with `git --version && python3 --version && gcc --version`. If your terminal does not print English
-messages, run `export LC_ALL=C` first, because the grader reads what Git prints.
+messages, run `export LC_ALL=C` first, because the grader reads what Git prints. If a long output opens in
+a pager (a screen with `:` or `(END)` at the bottom), press `q` to leave it.
 
 ## How to edit a file with nano
 
@@ -52,13 +53,17 @@ as in `git config user.name`.
 5. **Files come and go when you switch.** `ASSIGNMENT.md` and `tests/grade.py` exist only on `main` and
    on branches made from its latest commit. When you stand on an old commit (Tasks 6 and 7) they
    disappear from the folder, and they come back when you return to `main`. Run the grader from `main`.
+   While you stand on an old commit, change only the files a task tells you to (read this handout from the
+   PDF or from GitHub, not from the folder), or Git may refuse to switch back to `main`.
 
 ## How you hand in your work
 
 1. In Task 1 you copy `submission/outputs.template.txt` to `submission/outputs.txt`.
 2. After **each step** (they are numbered **1.1**, **1.2**, ...), paste what the terminal printed under
    the matching `--- N.M` line of `submission/outputs.txt`, replacing `(paste output here)`. Do not edit
-   or delete the `=== TASK` and `--- N.M` lines. Type your answers after the colon of the `ANSWER-n :` lines.
+   or delete the `=== TASK` and `--- N.M` lines. Type your answers after the colon of the `ANSWER-n :` lines
+   (the line just below each `# Qn` question). Any editor is fine for `submission/outputs.txt`, for example a
+   second terminal with nano, or VS Code: the nano rule is for the project files.
 3. Fill in your name and registration number at the top of the file.
 4. Run the automatic grader whenever you want to see where you stand (from branch `main`):
 
@@ -320,7 +325,7 @@ git branch -v
 
 ## Task 6: Hotfix from the release commit (15 marks)
 
-The field team calls: the `v0.1` rover freezes when an obstacle is more than about 80 cm away. `main` already
+The field team calls: the `v0.1` rover freezes when an obstacle is more than about 85 cm away. `main` already
 holds unfinished work from this week, so Ben says: "Fix it from the release itself." Find the release
 commit, branch from it, watch the test fail, fix one number, watch it pass.
 

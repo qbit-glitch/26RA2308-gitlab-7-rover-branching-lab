@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import os
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -30,11 +31,23 @@ class Commit(NamedTuple):
     subject: str
 
 
+# The grader's own copy of the published C files. The C test is built ONLY from these (never from files in
+# the repository being graded), so grading a student's folder cannot run the student's code.
+TRUSTED_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+TRUSTED_FILES = ("src/sensor.c", "src/sensor.h", "tests/test_sensor.c", "tests/check_build.py")
+LIMITS_PATH = "src/sensor_limits.h"
+GIT_TIMEOUT = 60
+C_TEST_TIMEOUT = 120
+
+
 def run_git_rc(repo: str, *args: str) -> Tuple[int, str]:
-    """Run git in 'repo' and return (exit code, stdout)."""
+    """Run git in 'repo' and return (exit code, stdout); a git call that hangs is stopped and reported as 124."""
     env = dict(os.environ, LC_ALL="C", GIT_PAGER="cat", GIT_TERMINAL_PROMPT="0")
-    proc = subprocess.run(["git", *args], cwd=repo, env=env, stdout=subprocess.PIPE,
-                          stderr=subprocess.PIPE, encoding="utf-8", errors="replace")
+    try:
+        proc = subprocess.run(["git", *args], cwd=repo, env=env, stdout=subprocess.PIPE,
+                              stderr=subprocess.PIPE, encoding="utf-8", errors="replace", timeout=GIT_TIMEOUT)
+    except subprocess.TimeoutExpired:
+        return 124, ""
     return proc.returncode, proc.stdout
 
 
@@ -94,6 +107,10 @@ class Facts:
         """Subject line of the commit named by 'token' ('' if unknown)."""
         return run_git(self.repo, "show", "-s", "--format=%s", token).strip()
 
+    def author_name(self, sha: str) -> str:
+        """Author name recorded in commit 'sha' (the identity the student really committed with)."""
+        return run_git(self.repo, "show", "-s", "--format=%an", sha).strip()
+
     def parent(self, sha: str) -> str:
         """Full SHA of the first parent of 'sha' ('' for a root commit)."""
         return self.rev(f"{sha}^")
@@ -136,24 +153,33 @@ class Facts:
 
     def reflog_commit(self, subject: str) -> Optional[str]:
         """Full SHA of the commit made with this subject, found in the HEAD reflog (None if absent)."""
+        wanted = (f"commit: {subject}", f"commit (amend): {subject}")  # an amended message counts too
         for entry in self.head_reflog():
-            if entry["msg"] == f"commit: {subject}":
+            if entry["msg"] in wanted:
                 return entry["sha"]
         return None
 
-    def c_test_passes(self, ref: str) -> bool:
-        """Export 'ref' to a temporary folder and run its tests/check_build.py there.
+    def c_test_passes_with_limits(self, limits: str) -> bool:
+        """Run the C unit test with 'limits' as src/sensor_limits.h, built only from the grader's own files.
 
-        Raises RuntimeError with one readable sentence when the C code cannot be built (no compiler)."""
-        archive = subprocess.run(["git", "archive", "--format=tar", ref], cwd=self.repo,
-                                 stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        if archive.returncode != 0:
-            raise RuntimeError(f"could not export {ref}")
+        'limits' must already have been checked by the caller (nothing the student wrote is executed).
+        Raises RuntimeError with one readable sentence when the C code cannot be built (no compiler, a hang)."""
         with tempfile.TemporaryDirectory() as tree:
-            subprocess.run(["tar", "-x", "-C", tree], input=archive.stdout, check=True)
-            proc = subprocess.run([sys.executable, os.path.join(tree, "tests", "check_build.py")], cwd=tree,
-                                  stdout=subprocess.PIPE, stderr=subprocess.STDOUT, encoding="utf-8",
-                                  errors="replace", env=dict(os.environ, PYTHONDONTWRITEBYTECODE="1"))
+            for rel in TRUSTED_FILES:
+                source = os.path.join(TRUSTED_ROOT, rel)
+                if not os.path.isfile(source):
+                    raise RuntimeError(f"the grader's own copy of {rel} is missing; run the grader from a complete clone")
+                os.makedirs(os.path.join(tree, os.path.dirname(rel)), exist_ok=True)
+                shutil.copyfile(source, os.path.join(tree, rel))
+            with open(os.path.join(tree, LIMITS_PATH), "w", encoding="utf-8") as handle:
+                handle.write(limits)
+            try:
+                proc = subprocess.run([sys.executable, os.path.join(tree, "tests", "check_build.py")], cwd=tree,
+                                      stdout=subprocess.PIPE, stderr=subprocess.STDOUT, encoding="utf-8",
+                                      errors="replace", env=dict(os.environ, PYTHONDONTWRITEBYTECODE="1"),
+                                      timeout=C_TEST_TIMEOUT)
+            except subprocess.TimeoutExpired:
+                raise RuntimeError("the C unit test took too long and was stopped") from None
         if proc.returncode == 2:
             lines = proc.stdout.strip().splitlines()
             raise RuntimeError(lines[-1] if lines else "the C test could not be built")

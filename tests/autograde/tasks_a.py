@@ -5,10 +5,10 @@ import re
 from typing import List
 
 from .context import Ctx
-from .facts import IDEA_SUBJECT, STAFF_SUBJECT, Facts
+from .facts import IDEA_SUBJECT, Facts
 from .framework import Task
 from .textutil import (
-    BranchRow, branch_names, decorations, first_match, get_answer, parse_branch_list, parse_config_list,
+    BranchRow, branch_names, decorations, first_match, get_answer_int, parse_branch_list, parse_config_list,
     sha_matches,
 )
 
@@ -22,8 +22,10 @@ PLANNER_SUBJECT = "feat(nav): add path planner stub"
 ORIGINAL_FIRST_LINE = "/* controller.c - motion commands for the Kestrel-1 rover */"
 
 
-def _name(facts: Facts) -> str:
-    return facts.config_value("user.name")
+def _signed_by_author(facts: Facts, sha: str, content: str) -> bool:
+    """The text a student typed carries the name of the person who made the commit."""
+    author = facts.author_name(sha)
+    return bool(author) and author in content
 
 
 # -- Task 1 -----------------------------------------------------------------
@@ -38,8 +40,9 @@ def grade_task1(ctx: Ctx) -> Task:
     t.check(1, "1.1 alias.tree is set to 'log --oneline --graph --decorate --all'",
             lambda: cfg.get("alias.tree") == "log --oneline --graph --decorate --all")
     rows = parse_branch_list(ctx.step("1.2"))
-    t.check(1, "1.2 only the branch main exists and it is checked out (course-staff commit on top)",
-            lambda: len(rows) == 1 and rows[0].current and rows[0].name == "main" and STAFF_SUBJECT in rows[0].rest)
+    t.check(1, "1.2 only the branch main exists, it is checked out, and it is on the published tip",
+            lambda: len(rows) == 1 and rows[0].current and rows[0].name == "main"
+            and sha_matches(rows[0].sha, f.origin_tip))
     names13 = branch_names(ctx.step("1.3"))
     t.check(1, "1.3 lists remotes/origin/HEAD and remotes/origin/main",
             lambda: "remotes/origin/HEAD" in names13 and "remotes/origin/main" in names13)
@@ -72,7 +75,7 @@ def _idea_commit_ok(f: Facts) -> bool:
         return False
     above = f.commits_above(f.origin_tip, sha)
     content = f.file_at(sha, "IDEAS.txt") or ""
-    return len(above) == 1 and above[0]["files"] == ["IDEAS.txt"] and bool(_name(f)) and _name(f) in content
+    return len(above) == 1 and above[0]["files"] == ["IDEAS.txt"] and _signed_by_author(f, sha, content)
 
 
 def _streams_ok(f: Facts) -> bool:
@@ -119,8 +122,8 @@ def grade_task2(ctx: Ctx) -> Task:
     t.check(3, "live repo: the two feature branches still descend from the published tip, and the wip commit "
                "sits on that tip, adds only IDEAS.txt and carries your name",
             lambda: _streams_ok(f), needs_repo=True)
-    t.check(1, "live repo: the SHA pasted in 2.5 is that commit",
-            lambda: sha_matches(first_match(r"(?<=\[feature/discarded-idea )[0-9a-f]{7,40}", s25),
+    t.check(1, "live repo: the SHA pasted in 2.5 is that commit (paste the output of your last commit command)",
+            lambda: sha_matches((re.findall(r"\[feature/discarded-idea ([0-9a-f]{7,40})\]", s25) or [""])[-1],
                                 f.reflog_commit(IDEA_SUBJECT) or ""), needs_repo=True)
     t.check(2, "live repo: HEAD reflog shows you moved to the four new branches in order and back to main",
             lambda: _switch_order_ok(f), needs_repo=True)
@@ -136,7 +139,7 @@ def _stream_ok(f: Facts, branch: str, subject: str, path: str, needles: List[str
     if new_file and above[0]["added"] != [path]:
         return False
     content = f.file_at(branch, path) or ""
-    return bool(_name(f)) and _name(f) in content and all(n in content for n in needles)
+    return _signed_by_author(f, str(above[0]["sha"]), content) and all(n in content for n in needles)
 
 
 def grade_task3(ctx: Ctx) -> Task:
@@ -191,5 +194,5 @@ def grade_task4(ctx: Ctx) -> Task:
                "feature/path-planning",
             lambda: set(branch_names(ctx.step("4.4"))) == {"feature/discarded-idea", OBSTACLE, PLANNING})
     t.check(1, "ANSWER-1 is 3 (branches that hold work main does not have)",
-            lambda: get_answer(ctx.text, 1) == "3")
+            lambda: get_answer_int(ctx.text, 1) == "3")
     return t

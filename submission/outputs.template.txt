@@ -84,7 +84,7 @@ Reg No :
 --- 4.4  git branch --no-merged ---
 (paste output here)
 
-# ANSWER-1 : how many of your branches contain work that main does not have?
+# Q1 (type the answer on the ANSWER-1 line below): how many of your branches contain work that main does not have?
 ANSWER-1 :
 
 
@@ -114,7 +114,7 @@ ANSWER-1 :
 --- 6.1  git log --oneline ---
 (paste output here)
 
-# ANSWER-2 : SHA of the commit "release: v0.1 field build"   (at least 7 characters)
+# Q2 (type the answer on the ANSWER-2 line below): SHA of the commit "release: v0.1 field build"   (at least 7 characters)
 ANSWER-2 :
 
 --- 6.2  git switch -c hotfix/sensor-timeout <SHA of ANSWER-2>   then   git log --oneline -1 ---
@@ -141,7 +141,7 @@ ANSWER-2 :
 --- 7.1  git log --oneline -- results/experiments.txt ---
 (paste output here)
 
-# ANSWER-3 : SHA of the commit "experiment: baseline detector run at threshold 0.40"   (at least 7 characters)
+# Q3 (type the answer on the ANSWER-3 line below): SHA of the commit "experiment: baseline detector run at threshold 0.40"   (at least 7 characters)
 ANSWER-3 :
 
 --- 7.2  git checkout <SHA of ANSWER-3> ---
@@ -153,7 +153,7 @@ ANSWER-3 :
 --- 7.4  git commit -m "temp: experiment from old commit" ---
 (paste output here)
 
-# ANSWER-4 : the SHA printed in square brackets by the 7.4 commit   (at least 7 characters)
+# Q4 (type the answer on the ANSWER-4 line below): the SHA printed in square brackets by the 7.4 commit   (at least 7 characters)
 ANSWER-4 :
 
 --- 7.5  git switch -c experiment/detached-recovery   then   git log --oneline -2 ---
@@ -174,5 +174,5 @@ ANSWER-4 :
 --- 8.2  git status ---
 (paste output here)
 
-# ANSWER-5 : how many local branches do you have now?
+# Q5 (type the answer on the ANSWER-5 line below): how many local branches do you have now?
 ANSWER-5 :

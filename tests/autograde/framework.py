@@ -26,8 +26,10 @@ class Task:
         self.results: List[CheckResult] = []
 
     def check(self, points: int, description: str, condition: Condition,
-              needs_repo: bool = False) -> None:
-        """Record one check. 'condition' may be a bool or a function returning one."""
+              needs_repo: bool = False, why: Optional[Callable[[], str]] = None) -> None:
+        """Record one check. 'condition' may be a bool or a function returning one.
+
+        'why' (optional) explains a failure in the report, for example which branch is extra."""
         if needs_repo and not self.repo_mode:
             self.results.append(CheckResult(points, description, "skip", "needs the live repo"))
             return
@@ -36,6 +38,11 @@ class Task:
             ok = bool(condition() if callable(condition) else condition)
         except Exception as exc:  # a malformed submission must never crash the grader
             ok, detail = False, f"could not evaluate ({type(exc).__name__}: {exc})"
+        if not ok and not detail and why is not None:
+            try:
+                detail = why()
+            except Exception:  # an explanation must never crash the grader
+                detail = ""
         self.results.append(CheckResult(points, description, "ok" if ok else "fail", detail))
 
     def validate(self) -> None:

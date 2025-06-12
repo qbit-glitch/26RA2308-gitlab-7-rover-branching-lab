@@ -26,12 +26,24 @@ from autograde.framework import Task, format_report  # noqa: E402
 from autograde.integrity import integrity_warnings  # noqa: E402
 from autograde.tasks_a import grade_task1, grade_task2, grade_task3, grade_task4  # noqa: E402
 from autograde.tasks_b import grade_task5, grade_task6, grade_task7, grade_task8  # noqa: E402
-from autograde.textutil import header_field, normalise, parse_steps  # noqa: E402
+from autograde.textutil import header_field, normalise, parse_steps, safe_text  # noqa: E402
 
 REPO_ROOT = os.path.dirname(HERE)
 DEFAULT_SUBMISSION = os.path.join(REPO_ROOT, "submission", "outputs.txt")
 GRADERS = [grade_task1, grade_task2, grade_task3, grade_task4,
            grade_task5, grade_task6, grade_task7, grade_task8]
+
+
+def write_report(target: str, content: str) -> None:
+    """Write the report file, but never through a link: a student's folder could point results.txt elsewhere."""
+    flags = os.O_WRONLY | os.O_CREAT | os.O_TRUNC | getattr(os, "O_NOFOLLOW", 0)
+    try:
+        descriptor = os.open(target, flags, 0o644)
+    except OSError:
+        print(f"note: {os.path.basename(target)} was not written (it is a link or cannot be written)")
+        return
+    with os.fdopen(descriptor, "w", encoding="utf-8") as handle:
+        handle.write(content)
 
 
 def parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
@@ -68,8 +80,8 @@ def main(argv: Optional[List[str]] = None) -> int:
         task.validate()
         tasks.append(task)
 
-    who = header_field(text, "Name") or "(name not filled in)"
-    reg = header_field(text, "Reg No") or "(reg no not filled in)"
+    who = safe_text(header_field(text, "Name")) or "(name not filled in)"
+    reg = safe_text(header_field(text, "Reg No")) or "(reg no not filled in)"
     header = [
         "Rover Branching Lab - automatic grader",
         f"Student : {who}   {reg}",
@@ -79,12 +91,10 @@ def main(argv: Optional[List[str]] = None) -> int:
     report = format_report(tasks, header, verbose=not args.brief)
     warnings = integrity_warnings(ctx)
     for warning in warnings:
-        report += f"\nINTEGRITY WARNING: {warning}"
+        report += f"\nINTEGRITY WARNING: {safe_text(warning)}"
     print(report)
     if not args.no_report and not args.outputs_only:
-        target = os.path.join(os.path.dirname(os.path.abspath(args.submission)), "results.txt")
-        with open(target, "w", encoding="utf-8") as handle:
-            handle.write(report + "\n")
+        write_report(os.path.join(os.path.dirname(os.path.abspath(args.submission)), "results.txt"), report + "\n")
     return 0 if all(task.passed for task in tasks) else 1
 
 
